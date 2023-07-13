@@ -1,0 +1,151 @@
+Sub MultiYearStocks_Analysis():
+
+'CREATED BY MICHAEL ROBERTS
+'MODULE 2 CHALLENGE - VISUAL BASICS FOR APPLICATIONS COURSE
+'COLUMBIA UNIVERSITY DATA ANALYTICS PROGRAM
+'JULY 13, 2023
+
+'============================ SECTION 1
+
+'This script will run on all three worksheets in Multiple_year_stock-MDR.xlsm Excel document
+'Create needed variables to run throughout worksheets
+
+Dim ws As Worksheet
+Dim totalVolume As Double
+Dim c As Long
+Dim p As Integer
+Dim change As Double
+Dim rowCount As Long
+Dim start As Long
+Dim percentChange As Double
+
+'=============================SECTION 2
+For Each ws In Worksheets
+      
+    'Set Column Titles in each worksheet and in cells O2 to O4
+    ws.Range("I1").Value = "Ticker"
+    ws.Range("J1").Value = "Yearly Change"
+    ws.Range("K1").Value = "Percent Change"
+    ws.Range("L1").Value = "Total Stock Volume"
+    ws.Range("P1").Value = "Ticker"
+    ws.Range("Q1").Value = "Value"
+    ws.Range("O1").Value = "Other Key Analysis"
+    ws.Range("O2").Value = "Greatest % Increase"
+    ws.Range("O3").Value = "Greatest % Decrease"
+    ws.Range("O4").Value = "Greatest Total Volume"
+       
+    'Set values for each worksheet
+    p = 0
+    totalVolume = 0
+    change = 0
+    start = 2
+'==================================SECTION 3
+'Identify the last row with data in each worksheet
+    rowCount = Cells(Rows.Count, "A").End(xlUp).row
+    For c = 2 To rowCount
+    
+        If ws.Cells(c + 1, 1).Value <> ws.Cells(c, 1) Then
+        
+            totalVolume = totalVolume + ws.Cells(c, 7).Value
+        
+            If totalVolume = 0 Then
+                ws.Range("I" & 2 + p).Value = Cells(c, 1).Value
+                ws.Range("J" & 2 + p).Value = 0
+                ws.Range("K" & 2 + p).Value = "%" & 0
+                ws.Range("L" & 2 + p).Value = 0
+            
+            Else
+                
+                If ws.Cells(start, 3) = 0 Then
+                    For find_value = start To c
+                        If ws.Cells(find_value, 3).Value <> 0 Then
+                            start = find_value
+                            Exit For
+                        End If
+                Next find_value
+            End If
+            
+  '==================================SECTION 4 --THIS SECTION'S CODE ADAPTED FROM CODE RECEIVED THROUGH COURSE CONTENT FROM INSTRUCTOR
+        'Calculate Change
+            change = (ws.Cells(c, 6) - ws.Cells(start, 3))
+            percentChange = change / ws.Cells(start, 3)
+        
+            start = c + 1
+        'print the results to specific cell addresses with specific formatting
+        
+            ws.Range("I" & 2 + p).Value = ws.Cells(c, 1).Value
+            ws.Range("J" & 2 + p).Value = change
+            ws.Range("J" & 2 + p).NumberFormat = "0.00"
+            ws.Range("K" & 2 + p).Value = percentChange
+            ws.Range("K" & 2 + p).NumberFormat = "0.00%"
+            ws.Range("L" & 2 + p).Value = totalVolume
+            ws.Range("L" & 2 + p).NumberFormat = "#,##0" 'this one added by me for more clarity!
+            
+    '==========================================SECTION 7 - THIS CODE ADAPTED FROM COURSE MATERIAL IN VBA CLASS
+            
+        
+        'format cells with positive change to green and negative change to red, no change to yellow
+            Select Case change
+                Case Is > 0
+                    ws.Range("J" & 2 + p).Interior.ColorIndex = 4
+                Case Is < 0
+                    ws.Range("J" & 2 + p).Interior.ColorIndex = 3
+                Case Else
+                    ws.Range("J" & 2 + p).Interior.ColorIndex = 6
+            End Select
+            
+            Select Case change
+                Case Is > 0
+                    ws.Range("K" & 2 + p).Interior.ColorIndex = 4
+                Case Is < 0
+                    ws.Range("K" & 2 + p).Interior.ColorIndex = 3
+                Case Else
+                    ws.Range("K" & 2 + p).Interior.ColorIndex = 6
+            End Select
+  '==========================================SECTION 8
+        End If
+        
+        'Reset variables for new stock ticker
+        change = 0
+        p = p + 1
+        totalVolume = 0
+        
+        Else
+            totalVolume = totalVolume + ws.Cells(c, 7).Value
+        End If
+    Next c
+    
+ '=========================================SECTION 9 -- CODE IN THIS SECTION PROVIDED TOTALLY BY INSTRUCTOR FROM VBA CLASS
+    
+    'Calculate Maximum Stock Volume, Greatest percent Increase and Decrease Change
+    ws.Range("Q2") = "%" & WorksheetFunction.Max(ws.Range("K2:K" & rowCount)) * 100
+    ws.Range("Q3") = "%" & WorksheetFunction.Min(ws.Range("K2:K" & rowCount)) * 100
+    ws.Range("Q4") = WorksheetFunction.Max(ws.Range("L2:L" & rowCount)) '.NumberFormat = "#,##0"
+    
+    'returns one less because header row not a factor
+    increase_number = WorksheetFunction.Match(WorksheetFunction.Max(ws.Range("K2:K" & rowCount)), ws.Range("K2:K" & rowCount), 0)
+    decrease_number = WorksheetFunction.Match(WorksheetFunction.Min(ws.Range("K2:K" & rowCount)), ws.Range("K2:K" & rowCount), 0)
+    volume_number = WorksheetFunction.Match(WorksheetFunction.Max(ws.Range("L2:L" & rowCount)), ws.Range("L2:L" & rowCount), 0)
+        
+    'Place ticker symbol associated with total, greatest % of increase and decrease
+    ws.Range("P2") = ws.Cells(increase_number + 1, 9)
+    ws.Range("P3") = ws.Cells(decrease_number + 1, 9)
+    ws.Range("P4") = ws.Cells(volume_number + 1, 9)
+    
+    '========================================= LAST SECTION
+    
+    'This additional code was added by me outside of the homework requirements to make titles, etc. more readable.
+    'Format all columns in the worksheets to adjust (autofit) to largest data in cells
+    'Make column headings bold, font size 16, number format with comma separating numbers > 1,000
+    
+    ws.Range("A1:Q1").Font.Bold = True
+    ws.Range("A1:Q1").Font.Size = 14
+    ws.Range("Q4").NumberFormat = "#,##0"
+    ws.Range("G:G").NumberFormat = "#,##0"
+    ws.Range("G:L").Columns.AutoFit
+    ws.Range("O:Q").Columns.AutoFit
+    
+    Next ws
+        
+End Sub
+
